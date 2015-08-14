@@ -1,0 +1,95 @@
+;;Наиболее интересные примеры по мере прочтения "Clojure Programming" Chas Emerick
+;;===============================================================================
+
+;;Нахождение среднего значения массива чисел
+
+(defn average
+	[numbers]
+		(/ (apply + numbers) (count numbers)))
+
+;;Развернутая форма этой функции
+
+(def average (fn average
+	[numbers]
+		(/ (apply + numbers) (count numbers))))
+
+;;Перевод CamelCase -> camel-case
+
+(require '[clojure.string :as str])  
+	(def camel->keyword (comp keyword
+		str/join
+			(partial interpose \-)
+			(partial map str/lower-case)
+			#(str/split % #"(?<=[a-z])(?=[A-Z])"))) 
+
+;;То же с помощью макросов
+(defn camel->keyword
+	[s]
+	(->> (str/split s #"(?<=[a-z])(?=[A-Z])")
+		(map str/lower-case)
+		(interpose \-)
+		str/join
+		keyword))
+
+;; Ассоциативный массив из последовательности пар ключ-значение
+;;(camel-pairs->map ["CamelCase" 5 "lowerCamelCase" 3])
+;;= {:camel-case 5, :lower-camel-case 3}
+
+(def camel-pairs->map (comp (partial apply hash-map)
+							(partial map-indexed (fn [i x]
+													(if (odd? i)
+													x
+													(camel->keyword x))))))
+
+;;Проестейший REPL интерпретатор Clojure
+
+(defn embedded-repl
+"A naive Clojure REPL implementation. Enter ':quit'
+to exit."
+	[]
+	(print (str (ns-name *ns*) "»> "))
+	(flush)
+	(let [expr (read)
+		value (eval expr)]
+		(when (not= :quit value)
+		(println value)
+		(recur))))
+
+;;Функции высших порядков
+;;============================================================================
+
+;;Классика: adder
+
+(defn adder
+	[n]
+	(fn [x] (+ n x)))
+
+;;Функция, удваивающая значение переданной ей функции
+;;(def double+ (doubler +))
+;;(double+ 3 4)
+;;=14
+
+(defn doubler
+	[f]
+	(fn [& args]
+	(* 2 (apply f args))))
+
+;;Аналог println, выводящий текст в stdout\
+;;(def out (print-logger *out*))  
+;;(out "hello")
+
+(defn print-logger
+[writer]
+#(binding [*out* writer]
+(println %)))  
+
+;;Вывод в файл
+;;(def log->file (file-logger "messages.log"))
+;;(log->file "hello")
+
+(require 'clojure.java.io)
+
+(defn file-logger
+	[file] 
+	#(with-open [f (clojure.java.io/writer file :append true)] 
+	((print-logger f) %)))

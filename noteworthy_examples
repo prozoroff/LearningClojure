@@ -74,47 +74,39 @@ to exit."
 	(fn [& args]
 	(* 2 (apply f args))))
 
-;;Аналог println, выводящий текст в stdout\
-;;(def out (print-logger *out*))  
-;;(out "hello")
+;;Количество фоловеров в Twitter
 
-(defn print-logger
-[writer]
-#(binding [*out* writer]
-(println %)))  
+(require 'clojure.xml)
+(defn twitter-followers
+	[username]
+	(->> (str "https://api.twitter.com/1.1/users/show.xml?screen_name="
+		username)
+		clojure.xml/parse
+		:content
+		(filter (comp #{:followers_count} :tag))
+		first
+		:content
+		first
+		Integer/parseInt))
 
-;;Вывод в файл
-;;(def log->file (file-logger "messages.log"))
-;;(log->file "hello")
+;;Мемоизация
 
-(require 'clojure.java.io)
+(defn prime?
+	[n]
+	(cond
+		(== 1 n) false
+		(== 2 n) true
+		(even? n) false
+		:else (-» (range 3 (inc (Math/sqrt n)) 2)
+		(filter #(zero? (rem n %)))
+		empty?)))
 
-(defn file-logger
-	[file] 
-	#(with-open [f (clojure.java.io/writer file :append true)] 
-	((print-logger f) %)))
+(time (prime? 12348))
 
-;;Функция для логирования в несколько мест
-;;(log "hello again”)
+(let [m-prime? (memoize prime?)]
+	(time (m-prime? 12348))
+	(time (m-prime? 12348)))
 
-(defn multi-logger
-	[& logger-fns] 
-	#(doseq [f logger-fns] 
-	(f %)))
+;;"Elapsed time: 2085.029 msecs" 
+;;"Elapsed time: 0.042 msecs"
 
-(def log (multi-logger 
-	(print-logger *out*)
-	(file-logger "messages.log")))
-
-;;Добавление времени в лог
-;;(log-timestamped "goodbye, now")
-
-(defn timestamped-logger
-	[logger]
-	#(logger (format "[%1$tY-%1$tm-%1$te %1$tH:%1$tM:%1$tS] %2$s"
-	(java.util.Date.) %)))
-
-(def log-timestamped (timestamped-logger
-	(multi-logger
-	(print-logger *out*)
-	(file-logger "messages.log"))))

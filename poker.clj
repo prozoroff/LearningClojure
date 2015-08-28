@@ -32,25 +32,41 @@
 		( if (Character/isDigit r) (Integer/valueOf (str r)) (rank-replacements r))))
 
 (defn num-of-a-kind? 
-	"that returns true if the hand 
+	"returns true if the hand 
 	contains a assigned num of a kind."
-	[cards num]
-	(.contains (into [] (vals (frequencies (map rank cards)))) num))
+	[cards kind number]
+	(.contains (into [] (vals (frequencies (map kind cards)))) number))
 
 (defn pair? 
 	"returns true if there is a pair in hand 
 	and false if there is no pair in hand."
 	[cards] 
-	(num-of-a-kind? cards 2))
+	(num-of-a-kind? cards rank 2))
 
 (defn three-of-a-kind?
-	"that returns true if the hand 
+	"returns true if the hand 
 	contains a three of a kind."
 	[cards] 
-	(num-of-a-kind? cards 3))
+	(num-of-a-kind? cards rank 3))
 
 (defn four-of-a-kind?
-	"that returns true if the hand 
+	"returns true if the hand 
 	contains a four of a kind."
 	[cards] 
-	(num-of-a-kind? cards 4))
+	(num-of-a-kind? cards rank 4))
+
+(defn flush?
+	"returns true if the hand is a flush."
+	[cards] 
+	(num-of-a-kind? cards suit 5))
+
+(defn full-house?
+	"returns true if the hand is a full house."
+	[cards] 
+	(= (sort (vals (frequencies (map rank cards)))) '(2 3)))
+
+(defn two-pairs?
+	"return true if hand has two pairs, 
+	and otherwise false."
+	[cards] 
+	(= (sort (vals (frequencies (map rank cards)))) '(1 2 2)))

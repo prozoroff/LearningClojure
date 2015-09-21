@@ -110,5 +110,23 @@ to exit."
 ;;"Elapsed time: 2085.029 msecs" 
 ;;"Elapsed time: 0.042 msecs"
 
+;Линейная интерполяция
 
+(defn interpolate
+"Принимает коллекцию координат точек (в виде кортежей [х у]) и возвращает
+Функцию, обеспечивающую линейную интерполяцию между этими точками."
+	[points]
+	(let [results (into (sorted-map) (map vec points))]
+	(fn [x]
+	(let [[xa ya] (first (rsubseq results <= x)) 
+	[xb yb] (first (subseq results > x))]
+	(if (and xa xb)
+	(/ (+ (* ya (- xb x)) (* yb (- x xa)))
+	(- xb xa))
+	(or ya yb))))))
 
+;(def f (interpolate [[0 0] [10 10] [15 5]]))
+;= #’user/f
+;(map f [2 10 12])
+;=  (2 10 8)
+	

@@ -54,8 +54,15 @@
     (helper 1 number)))
 
 (defn power [base exp]
+  "power through recursion"
   (let [helper (fn [acc exp]
                  (if (zero? exp)
                    acc
                    (recur (* acc base) (dec exp))))]
     (helper 1 exp)))
+
+(defn last-element [[n & more]]
+  "last element through recursion"
+  (if more
+    (recur more)
+    n))
